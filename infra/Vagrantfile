@@ -1,0 +1,45 @@
+Vagrant.configure("2") do |config|
+  
+  # VM 1 - K3S Server/Control Plane
+  config.vm.define "k3s-server" do |server|
+    server.vm.box = "generic/ubuntu2204"
+    server.vm.hostname = "k3s-server"
+    server.vm.network "private_network", ip: "192.168.56.11", virtualbox__intnet: true
+
+    # Virtual Box Config
+    server.vm.provider "virtualbox" do |vb|
+      vb.name = "K3S Server"
+      vb.memory = 1024
+      vb.cpus = 2
+    end
+  end
+
+  # VM 2 - K3S Agent 1
+  config.vm.define "k3s-agent-1" do |agent_1|
+    agent_1.vm.box = "generic/ubuntu2204"
+    agent_1.vm.hostname = "k3s-agent-1"
+    agent_1.vm.network "private_network", ip: "192.168.56.21", virtualbox__intnet: true
+
+    # Virtual Box Config
+    agent_1.vm.provider "virtualbox" do |vb|
+      vb.name = "K3S Agent - 1"
+      vb.memory = 1024
+      vb.cpus = 2
+    end
+  end
+
+  # VM 3 - K3S Agent 2
+  config.vm.define "k3s-agent-2" do |agent_2|
+    agent_2.vm.box = "generic/ubuntu2204"
+    agent_2.vm.hostname = "k3s-agent-2"
+    agent_2.vm.network "private_network", ip: "192.168.56.22", virtualbox__intnet: true
+
+    # Virtual Box Config
+    agent_2.vm.provider "virtualbox" do |vb|
+      vb.name = "K3S Agent - 2"
+      vb.memory = 1024
+      vb.cpus = 2
+    end
+  end
+
+end

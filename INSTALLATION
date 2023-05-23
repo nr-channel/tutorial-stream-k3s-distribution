@@ -1,0 +1,62 @@
+# Resolvconf
+vi /etc/resolvconf
+# Change to 8.8.8.8 and 8.8.4.4 for "nameserver"
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+# Install resolvconf
+apt install resolvconf -y
+# Change
+vi /etc/resolvconf/resolv.conf.d/head
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+# Restart
+systemctl restart resolvconf.service
+systemctl restart systemd-resolved.service
+
+# For all VM's
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw enable
+
+ufw allow from 192.168.56.0/24
+ufw allow from 10.42.0.0/16
+ufw allow from 10.43.0.0/16
+
+# On Server
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.11 --flannel-iface=eth1" sh -s -
+
+# On Agent 1
+export TOKEN=K106cf03e8fb43a976813591f53cfe90c1bd9379ecec98e48daf0e8ac4a16e76375::server:fc6ac31ec27950807e83d44ac6213a94
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.21 --flannel-iface=eth1" K3S_URL=https://k3s-server:6443 K3S_TOKEN=$TOKEN sh -
+
+# On agent 2
+export TOKEN=K106cf03e8fb43a976813591f53cfe90c1bd9379ecec98e48daf0e8ac4a16e76375::server:fc6ac31ec27950807e83d44ac6213a94
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.22 --flannel-iface=eth1" K3S_URL=https://k3s-server:6443 K3S_TOKEN=$TOKEN sh -
+
+# On each agents
+ufw allow 30080/tcp
+ufw allow 30443/tcp
+
+# Download helm in server
+snap install helm --classic
+
+# Copy kubeconfig in server
+cp -p /etc/rancher/k3s/k3s.yaml ~/.kube/config
+chmod 700 ~/.kube/config
+
+# Add bitnami and install nginx, inside helm/nginx folder
+helm install my-nginx bitnami/nginx -f values.yaml
+
+# Then access inside vm (internal network)
+curl http://192.168.56.21:30080
+
+===========================================================================
+To reset/uninstall:
+===========================================================================
+On Agent First:
+/usr/local/bin/k3s-agent-uninstall.sh
+
+On server:
+/usr/local/bin/k3s-uninstall.sh
